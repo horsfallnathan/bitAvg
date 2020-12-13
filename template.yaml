@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  bitusdconv
+
+  Post Get Template to test SAM
+  
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+Parameters:
+  MailerApiKey:
+    Type: String
+    Description: API key for mailgun
+  
+  MailerDomain:
+    Type: String
+    Description: Mailer domain
+  
+  MailerFromEmail:
+    Type: String
+    Description: Mailer from email
+  
+  MailerFromTitle:
+    Type: String
+    Description: Mailer from title
+
+  GetAverageUrl:
+    Type: String
+    Description: Link to get average value
+
+Resources:
+  GetAvgFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: dist/endpoints
+      Handler: getAverage.lambdaHandler
+      Runtime: nodejs12.x
+   
+      Events:
+        GetStuff:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /getavg
+            Method: get
+
+  PostFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: dist/endpoints
+      Handler: post.lambdaHandler
+      Runtime: nodejs12.x
+      Environment:
+        Variables:
+          MAILER_API_KEY: !Ref MailerApiKey
+          MAILER_DOMAIN: !Ref MailerDomain
+          MAILER_FROM_EMAIL: !Ref MailerFromEmail
+          MAILER_FROM_TITLE: !Ref MailerFromTitle
+          GET_AVERAGE_URL: !Ref GetAverageUrl
+      Events:
+        PostStuff:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /post
+            Method: post
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  BackEndpoint:
+    Description: "API Gateway endpoint URL for Prod stage"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
