@@ -41,10 +41,10 @@ class HandleRequests {
     return response;
   }
 
-  public async sendMessage(average: number | string) {
+  public async sendMessage(average: number | string, email: string) {
     const data = {
       from: "roundingle@gmail.com",
-      to: "roundingle@gmail.com",
+      to: email,
       subject: "BitUSD - Exchange Average",
       text: `The BitUSD - Exchange Average is ${average}`,
     };
@@ -74,15 +74,18 @@ let response: HTTPResponse;
 const lambdaHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  const body = JSON.parse(event.body);
+  const email = body.email;
+
   try {
     // make request to average api for value
     await Client.makeRequests(process.env.GET_AVERAGE_URL || "test/api")
       .then((res) => {
-        Client.sendMessage(res.data.body || 19870)
+        Client.sendMessage(res.data.body || 19870, email)
           .then((messageRes) => {
             response = {
               statusCode: 200,
-              body: JSON.stringify(messageRes),
+              body: JSON.stringify(res.data),
             };
           })
           .catch((error) => {
