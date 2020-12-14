@@ -1,15 +1,9 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import Axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import * as MailGunner from "mailgun-js";
 
 // Import environment variables
 const API_KEY = process.env.MAILER_API_KEY || "testkey";
 const DOMAIN = process.env.MAILER_DOMAIN || "testdomain";
-
-type HTTPResponse = {
-  statusCode: number;
-  body: any;
-};
 
 const AxiosConfig: AxiosRequestConfig = {
   method: "GET",
@@ -21,13 +15,10 @@ const AxiosConfig: AxiosRequestConfig = {
     },
   },
 };
-
 class HandleRequests {
   service: AxiosInstance;
-  mailgun: MailGunner.Mailgun;
   public constructor(config: AxiosRequestConfig) {
     this.service = Axios.create(config);
-    this.mailgun = MailGunner({ apiKey: API_KEY, domain: DOMAIN });
   }
   public async makeRequests(url: string): Promise<AxiosResponse> {
     if (!url)
@@ -40,33 +31,41 @@ class HandleRequests {
     }
     return response;
   }
-
-  public async sendMessage(average: number | string, email: string) {
+  public async postRequests(
+    average: number | string,
+    email: string
+  ): Promise<AxiosResponse> {
+    // if (!url)
+    //   return Promise.reject({ status: 400, response: "Pass url string" });
+    let response: AxiosResponse | Promise<any>;
     const data = {
       from: "roundingle@gmail.com",
       to: email,
       subject: "BitUSD - Exchange Average",
       text: `The BitUSD - Exchange Average is ${average}`,
     };
-
-    return this.mailgun.messages().send(data);
+    try {
+      response = await Axios({
+        method: "post",
+        url: `${DOMAIN}/messages`,
+        auth: {
+          username: "api",
+          password: `${API_KEY}`,
+        },
+        params: data,
+      });
+    } catch (error) {
+      response = Promise.reject(error);
+    }
+    return response;
   }
 }
-
 // instatiate new handleRequest instance with base axios config
 const Client = new HandleRequests(AxiosConfig);
-// intantiate function response
-let response: HTTPResponse;
 
 /**
  *
- * Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
  * @param {Object} event - API Gateway Lambda Proxy Input Format
- *
- * Context doc: https://docs.aws.amazon.com/lambda/latest/dg/nodejs-prog-model-context.html
- * @param {Object} context
- *
- * Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
  * @returns {Object} object - API Gateway Lambda Proxy Output Format
  *
  */
@@ -74,45 +73,35 @@ let response: HTTPResponse;
 const lambdaHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  let average;
+  let mailResponse;
+
   const body = JSON.parse(event.body);
   const email = body.email;
 
   try {
-    // make request to average api for value
-    await Client.makeRequests(process.env.GET_AVERAGE_URL || "test/api")
-      .then((res) => {
-        Client.sendMessage(res.data.body || 19870, email)
-          .then((messageRes) => {
-            response = {
-              statusCode: 200,
-              body: JSON.stringify(res.data),
-            };
-          })
-          .catch((error) => {
-            // handle errors from sending message
-            response = {
-              statusCode: 500,
-              body: JSON.stringify(error.message),
-            };
-          });
-      })
-      .catch((error) => {
-        // handle errors from call to average API
-        Promise.reject(
-          JSON.stringify({
-            error: error || "",
-            message: "error fetching average",
-          })
-        );
-      });
+    await Client.makeRequests(process.env.GET_AVERAGE_URL).then((res) => {
+      average = res.data;
+    });
   } catch (error) {
-    // handle try catch error
-    response = {
+    return {
       statusCode: 500,
-      body: error,
+      body: "Error fetching average",
     };
   }
-  return response;
+  try {
+    await Client.postRequests(average, email).then((res) => {
+      mailResponse = res.data;
+    });
+    return {
+      statusCode: 200,
+      body: JSON.stringify(mailResponse),
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: "Error posting message",
+    };
+  }
 };
-
 module.exports = { lambdaHandler, Client };
