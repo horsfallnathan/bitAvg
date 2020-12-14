@@ -31,7 +31,7 @@ class HandleRequests {
     }
     return response;
   }
-  public async postRequests(
+  public async sendMessage(
     average: number | string,
     email: string
   ): Promise<AxiosResponse> {
@@ -55,7 +55,10 @@ class HandleRequests {
         params: data,
       });
     } catch (error) {
-      response = Promise.reject(error);
+      response = Promise.reject({
+        error,
+        pubError: "Error in sending message",
+      });
     }
     return response;
   }
@@ -90,7 +93,7 @@ const lambdaHandler = async (
     };
   }
   try {
-    await Client.postRequests(average, email).then((res) => {
+    await Client.sendMessage(average, email).then((res) => {
       mailResponse = res.data;
     });
     return {
@@ -100,7 +103,7 @@ const lambdaHandler = async (
   } catch (error) {
     return {
       statusCode: 500,
-      body: "Error posting message",
+      body: JSON.stringify(error.pubError),
     };
   }
 };

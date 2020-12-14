@@ -50,11 +50,16 @@ describe("2. Post Function Test Suite", function () {
     describe("Send message method", function () {
       const event = {
         httpMethod: "GET",
+        body: JSON.stringify({
+          email: "test@email.com",
+        }),
       };
       describe("when email is sent successfully", function () {
         let makeRequestStub;
         let sendMessageStub;
-        const resp = { id: "<20201213161330", message: "Queued. No thanks" };
+        const resp = {
+          data: { id: "<20201213161330", message: "Queued. No thanks" },
+        };
         const avgApiResp = { data: { statusCode: 200, body: 19877 } };
         beforeEach(function () {
           sendMessageStub = sinon
@@ -74,18 +79,16 @@ describe("2. Post Function Test Suite", function () {
         });
         it("should return a success message", async () => {
           const result = await lambdaHandler(event);
-          expect(result.body).to.eq(JSON.stringify(resp));
+          expect(result.body).to.eq(JSON.stringify(resp.data));
         });
       });
       describe("when email post is unsuccessful", function () {
         let makeRequestStub;
         let sendMessageStub;
-        const resp = "test error sending data";
+        const resp = { pubError: "test error sending data" };
         const avgApiResp = { data: { statusCode: 200, body: 19877 } };
         beforeEach(function () {
-          sendMessageStub = sinon
-            .stub(Client, "sendMessage")
-            .rejects(new Error(resp));
+          sendMessageStub = sinon.stub(Client, "sendMessage").rejects(resp);
           makeRequestStub = sinon
             .stub(Client, "makeRequests")
             .resolves(Promise.resolve(avgApiResp));
@@ -100,7 +103,7 @@ describe("2. Post Function Test Suite", function () {
         });
         it("should return an error message in the body", async () => {
           const result = await lambdaHandler(event);
-          expect(result.body).to.eq(JSON.stringify(resp));
+          expect(result.body).to.eq(JSON.stringify(resp.pubError));
         });
       });
     });
