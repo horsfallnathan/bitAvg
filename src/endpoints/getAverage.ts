@@ -32,7 +32,29 @@ class HandleRequests {
   }
 }
 
+// Base config for axios instance
+const AxiosConfig: AxiosRequestConfig = {
+  method: "GET",
+  timeout: 30000,
+  headers: {
+    common: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  },
+};
+
+// instatiate new handleRequest instance with base axios config
+const Client = new HandleRequests(AxiosConfig);
+// intantiate function response
 let response;
+
+// define API links to visit
+const links: string[] = [
+  "https://www.bitstamp.net/api/v2/ticker/btcusd",
+  "https://api.coinbase.com/v2/exchange-rates?currency=BTC",
+  "https://api-pub.bitfinex.com/v2/tickers?symbols=tBTCUSD",
+];
 /**
  *
  * Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
@@ -64,13 +86,32 @@ const lambdaHandler = async (
   return response;
 };
 
+/**
+ *
+ * @param numbers Array of numbers
+ */
 const calculateAverage = (numbers: number[]): number => {
   if (numbers.length < 1) return 0;
   const average = numbers.reduce((x, y) => x + y, 0) / numbers.length;
   return average;
 };
-
 module.exports = {
   lambdaHandler,
   calculateAverage,
+};
+
+/**
+ * Parses the returned data, calculates their average and returns this
+ * @param returnedData response from resolved promise.all request to all APIs
+ */
+
+const getValue = (returnedData: AxiosResponse[]): number => {
+  // extract exchange rates from each api result
+  const bitstamp_val: number = Number(returnedData[0].data.bid) || 0;
+  const coinbase_val: number =
+    Number(returnedData[1].data.data.rates?.USD) || 0;
+  const bitfinex_val: number = Number(returnedData[2].data[0][1]) || 0;
+  // calculate and return their average
+  const average = calculateAverage([bitstamp_val, coinbase_val, bitfinex_val]);
+  return average;
 };

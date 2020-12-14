@@ -1,6 +1,9 @@
 import { expect } from "chai";
 const sinon = require("sinon");
-import { calculateAverage } from "../src/endpoints/getAverage";
+const {
+  calculateAverage,
+  labdaHandler,
+} = require("../src/endpoints/getAverage");
 
 describe("1. Get Average Function Test Suite", function () {
   after(() => {
