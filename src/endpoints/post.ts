@@ -3,8 +3,8 @@ import Axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import * as MailGunner from "mailgun-js";
 
 // Import environment variables
-const API_KEY = process.env.MAILER_API_KEY;
-const DOMAIN = process.env.MAILER_DOMAIN;
+const API_KEY = process.env.MAILER_API_KEY || "testkey";
+const DOMAIN = process.env.MAILER_DOMAIN || "testdomain";
 
 type HTTPResponse = {
   statusCode: number;
@@ -76,13 +76,13 @@ const lambdaHandler = async (
 ): Promise<APIGatewayProxyResult> => {
   try {
     // make request to average api for value
-    await Client.makeRequests(process.env.GET_AVERAGE_URL)
+    await Client.makeRequests(process.env.GET_AVERAGE_URL || "test/api")
       .then((res) => {
         Client.sendMessage(res.data.body || 19870)
-          .then((res) => {
+          .then((messageRes) => {
             response = {
               statusCode: 200,
-              body: JSON.stringify(res),
+              body: JSON.stringify(messageRes),
             };
           })
           .catch((error) => {

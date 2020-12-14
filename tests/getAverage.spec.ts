@@ -83,7 +83,9 @@ describe("1. Get Average Function Test Suite", function () {
       });
     });
     describe("lambda Handler function", function () {
-      let links = ["http://an-ext-api.com", "http://an-ext-api.com"];
+      const event = {
+        httpMethod: "GET",
+      };
       let getDataStub;
       beforeEach(() => {
         getDataStub = sinon.stub(Client, "getData");
@@ -103,17 +105,11 @@ describe("1. Get Average Function Test Suite", function () {
           );
         });
         it("should return status code 200", async () => {
-          const event = {
-            httpMethod: "GET",
-          };
           await lambdaHandler(event).then((res) => {
             expect(res.statusCode).to.be.eq(200);
           });
         });
         it("should return the average of prices", async () => {
-          const event = {
-            httpMethod: "GET",
-          };
           await lambdaHandler(event).then((res) => {
             expect(JSON.parse(res.body)).to.be.eq(
               calculateAverage([val1, val2, val3])
@@ -127,9 +123,6 @@ describe("1. Get Average Function Test Suite", function () {
           getDataStub.resolves(Promise.reject(new Error(errMessage)));
         });
         it("should return status code 503", async () => {
-          const event = {
-            httpMethod: "GET",
-          };
           await lambdaHandler(event).then((res) => {
             expect(res.statusCode).to.be.eq(503);
           });
