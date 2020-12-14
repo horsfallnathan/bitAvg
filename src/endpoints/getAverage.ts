@@ -30,6 +30,15 @@ class HandleRequests {
     }
     return response;
   }
+
+  /**
+   * Returns data from an array of APIs
+   * @param links Links of urls to visit
+   * @return {Promise.AxiosResponse[]}
+   */
+  public getData(links: string[]): Promise<AxiosResponse[]> {
+    return Promise.all(links.map((x) => this.makeRequests(x)));
+  }
 }
 
 // Base config for axios instance

@@ -8,15 +8,14 @@ const {
 
 describe("1. Get Average Function Test Suite", function () {
   after(() => {
-    console.log("====================***=====================");
+    console.log(
+      "================================***================================="
+    );
   });
   before(() => {
-    console.log("====================***=====================");
-  });
-
-  beforeEach(() => {
-    // sinon.restore();
-    console.log("--------------------------------------------");
+    console.log(
+      "================================***================================="
+    );
   });
 
   describe("Calculate Average Function", function () {
@@ -34,13 +33,13 @@ describe("1. Get Average Function Test Suite", function () {
     });
   });
 
-  describe("Lambda Handler", function () {
+  describe("Handle Request", function () {
     // sample response from calling 3 external api links
     const extApiResponse = {
       status: 200,
       response: { price: 18000, price1: 17920, price2: 17998 },
     };
-    describe("Request Handler", function () {
+    describe("Make request method", function () {
       let makeRequestStub;
       beforeEach(() => {});
       afterEach(() => {
@@ -65,6 +64,22 @@ describe("1. Get Average Function Test Suite", function () {
             })
         );
         expect(makeRequestStub.calledOnce).to.eq(true);
+      });
+    });
+    describe("getData method", function () {
+      let links = ["http://an-ext-api.com", "http://an-ext-api.com"];
+      let makeRequestStub;
+      beforeEach(() => {});
+      afterEach(() => {
+        makeRequestStub.restore();
+      });
+      it("should return an array with length of links", async () => {
+        makeRequestStub = sinon.stub(Client, "makeRequests");
+        makeRequestStub.resolves(extApiResponse);
+        await Client.getData(links).then((res) => {
+          expect(res.length).to.eq(links.length);
+        });
+        expect(makeRequestStub.calledTwice).to.eq(true);
       });
     });
   });
