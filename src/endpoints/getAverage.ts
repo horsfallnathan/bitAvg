@@ -56,7 +56,7 @@ const AxiosConfig: AxiosRequestConfig = {
 // instatiate new handleRequest instance with base axios config
 const Client = new HandleRequests(AxiosConfig);
 // intantiate function response
-let response;
+let response: HTTPResponse;
 
 // define API links to visit
 const links: string[] = [
@@ -79,18 +79,24 @@ const links: string[] = [
 const lambdaHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  if (event.httpMethod !== "GET") {
+    throw new Error(
+      `average API only accepts GET method, you tried: ${event.httpMethod}`
+    );
+  }
   try {
-    // const ret = await axios(url);
-    response = {
-      statusCode: 200,
-      body: JSON.stringify({
-        message: "hello world",
-        // location: ret.data.trim()
-      }),
-    };
+    await Client.getData(links).then((res) => {
+      let body = getValue(res);
+      response = {
+        statusCode: 200,
+        body: JSON.stringify(body),
+      };
+    });
   } catch (err) {
-    console.log(err);
-    return err;
+    response = {
+      statusCode: 503,
+      body: err.message,
+    };
   }
   return response;
 };

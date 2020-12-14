@@ -2,7 +2,7 @@ import { expect } from "chai";
 const sinon = require("sinon");
 const {
   calculateAverage,
-  labdaHandler,
+  lambdaHandler,
   Client,
 } = require("../src/endpoints/getAverage");
 
@@ -80,6 +80,68 @@ describe("1. Get Average Function Test Suite", function () {
           expect(res.length).to.eq(links.length);
         });
         expect(makeRequestStub.calledTwice).to.eq(true);
+      });
+    });
+    describe("lambda Handler function", function () {
+      let links = ["http://an-ext-api.com", "http://an-ext-api.com"];
+      let getDataStub;
+      beforeEach(() => {
+        getDataStub = sinon.stub(Client, "getData");
+      });
+      afterEach(() => {
+        getDataStub.restore();
+      });
+      describe("when requests are successful", function () {
+        const [val1, val2, val3] = [18456, 19000, 18882];
+        beforeEach(() => {
+          getDataStub.resolves(
+            Promise.resolve([
+              { data: { bid: val1 } },
+              { data: { data: { rates: { USD: val2 } } } },
+              { data: [["rates", val3]] },
+            ])
+          );
+        });
+        it("should return status code 200", async () => {
+          const event = {
+            httpMethod: "GET",
+          };
+          await lambdaHandler(event).then((res) => {
+            expect(res.statusCode).to.be.eq(200);
+          });
+        });
+        it("should return the average of prices", async () => {
+          const event = {
+            httpMethod: "GET",
+          };
+          await lambdaHandler(event).then((res) => {
+            expect(JSON.parse(res.body)).to.be.eq(
+              calculateAverage([val1, val2, val3])
+            );
+          });
+        });
+      });
+      describe("when requests are unsuccessful", function () {
+        const errMessage = "error in one link";
+        beforeEach(() => {
+          getDataStub.resolves(Promise.reject(new Error(errMessage)));
+        });
+        it("should return status code 503", async () => {
+          const event = {
+            httpMethod: "GET",
+          };
+          await lambdaHandler(event).then((res) => {
+            expect(res.statusCode).to.be.eq(503);
+          });
+        });
+        it("should return error message in body", async () => {
+          const event = {
+            httpMethod: "GET",
+          };
+          await lambdaHandler(event).then((res) => {
+            expect(res.body).to.be.eq(errMessage);
+          });
+        });
       });
     });
   });
