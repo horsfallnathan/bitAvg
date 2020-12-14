@@ -21,7 +21,7 @@ class HandleRequests {
   // Expose method to make calls
   public async makeRequests(url: string): Promise<AxiosResponse> {
     if (!url)
-      return Promise.reject({ status: 400, response: "Pass url string" });
+      return Promise.reject({ status: 404, response: "Pass url string" });
     let response: AxiosResponse | Promise<any>;
     try {
       response = await this.service(url);
@@ -95,10 +95,6 @@ const calculateAverage = (numbers: number[]): number => {
   const average = numbers.reduce((x, y) => x + y, 0) / numbers.length;
   return average;
 };
-module.exports = {
-  lambdaHandler,
-  calculateAverage,
-};
 
 /**
  * Parses the returned data, calculates their average and returns this
@@ -114,4 +110,10 @@ const getValue = (returnedData: AxiosResponse[]): number => {
   // calculate and return their average
   const average = calculateAverage([bitstamp_val, coinbase_val, bitfinex_val]);
   return average;
+};
+
+module.exports = {
+  lambdaHandler,
+  calculateAverage,
+  Client,
 };
