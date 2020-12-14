@@ -9,7 +9,8 @@
     "test": "ts-mocha --trace-warnings -p tsconfig.json tests/**/*.spec.ts",
     "compile": "tsc",
     "watch": "tsc -w",
-    "deploy": "sam deploy --guided"
+    "deploy": "sam deploy --guided",
+    "dev": "sam local start-api --env-vars .env.json --debug"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.65",
