@@ -129,5 +129,7 @@ $RECYCLE.BIN/
 
 # Compilation
 dist
+samconfig.toml
+local.py
 
 # End of https://www.gitignore.io/api/osx,node,linux,windows
