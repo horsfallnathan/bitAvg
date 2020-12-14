@@ -48,5 +48,5 @@
 
 ## Working link:
 
-- To get the average bit-usd exchange rate: [link](https://fnd333bnec.execute-api.us-east-1.amazonaws.com/Prod/getavg1)
+- To get the average bit-usd exchange rate: [link](https://fnd333bnec.execute-api.us-east-1.amazonaws.com/Prod/getavg)
 - To receive it as an email, send a post request to `https://fnd333bnec.execute-api.us-east-1.amazonaws.com/Prod/post`. Pass your email in the body and the average is sent to it [if you are on my mailing list ;) otherwise you get an error "Error in sending message"].
